@@ -1,5 +1,5 @@
 /*
- * FreeRTOS Kernel V10.3.1
+ * FreeRTOS Kernel V10.3.0
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -47,11 +47,41 @@ Changes from V2.6.0
 /* Start tasks with interrupts enables. */
 #define portFLAGS_INT_ENABLED					( ( StackType_t ) 0x80 )
 
-/* Hardware constants for timer 1. */
-#define portCLEAR_COUNTER_ON_MATCH				( ( uint8_t ) 0x08 )
-#define portPRESCALE_64							( ( uint8_t ) 0x03 )
-#define portCLOCK_PRESCALER						( ( uint32_t ) 64 )
-#define portCOMPARE_MATCH_A_INTERRUPT_ENABLE	( ( uint8_t ) 0x10 )
+/* Hardware definitions for timer*/
+#if defined(__AVR_ATmega323__)||defined(__AVR_ATmega328PB__)||defined(__AVR_ATmega2560__)
+#if defined(__AVR_ATmega323__)
+#define portINTERRUPT_REGISTER										TIMSK
+#define portCOMPARE_MATCH_INTERRUPT_ENABLE			( ( uint8_t ) 1<<4 )
+#else
+#define portINTERRUPT_REGISTER										TIMSK1
+#define portCOMPARE_MATCH_INTERRUPT_ENABLE			( ( uint8_t ) 1<<1 )
+#endif
+#define portCOMPARE_MATCH_REGISTER_HIGH					OCR1AH
+#define portCOMPARE_MATCH_REGISTER_LOW					OCR1AL
+#define portCOMPARE_MATCH_VECTOR								TIMER1_COMPA_vect
+#define portCLEAR_COUNTER_ON_MATCH							( ( uint8_t ) 1<<3 )
+#define portPRESCALE_64														( ( uint8_t ) 0x03 )
+#define portCLOCK_PRESCALER											( ( uint32_t ) 64 )
+#define portSETUP_CLOCK_AND_COMPARE_MATCH_BEHAVIOR()	\
+TCCR1B =  portCLEAR_COUNTER_ON_MATCH | portPRESCALE_64;
+
+#elif defined(__AVR_ATmega4809__)||defined(__AVR_ATmega4808__)
+#define portCONTROL_REGISTER											TCA0.SINGLE.CTRLA
+#define portTIMER_INTERRUPT_REGISTER							TCA0.SINGLE.INTCTRL
+#define portCOMPARE_MATCH_REGISTER_HIGH					TCA0.SINGLE.CMP0H
+#define portCOMPARE_MATCH_REGISTER_LOW					TCA0.SINGLE.CMP0L
+#define portCOMPARE_MATCH_VECTOR								TCA0_OVF_vect
+#define portTCA0_ENABLE														( ( uint8_t ) 0x01 )
+#define portCOMPARE_CHANNEL_ENABLE							( ( uint8_t ) 1<<4 )
+#define portCLEAR_COUNTER_ON_MATCH							( ( uint8_t ) 0x01 )
+#define portPRESCALE_64														( ( uint8_t ) 5<<1 )
+#define portCLOCK_PRESCALER											( ( uint32_t ) 64 )
+#define portCOMPARE_MATCH_INTERRUPT_ENABLE			( ( uint8_t ) 1<<4 )
+#define portSETUP_CLOCK_AND_COMPARE_MATCH_BEHAVIOR()	\
+TCA0.SINGLE.CTRLB = portCOMPARE_CHANNEL_0_ENABLE | portCLEAR_COUNTER_ON_MATCH;\
+TCA0.SINGLE.CTRLA = portTCA0_ENABLE | portPRESCALE_64;
+#endif
+
 
 /*-----------------------------------------------------------*/
 
@@ -380,18 +410,17 @@ uint8_t ucHighByte, ucLowByte;
 	ucLowByte = ( uint8_t ) ( ulCompareMatch & ( uint32_t ) 0xff );
 	ulCompareMatch >>= 8;
 	ucHighByte = ( uint8_t ) ( ulCompareMatch & ( uint32_t ) 0xff );
-	OCR1AH = ucHighByte;
-	OCR1AL = ucLowByte;
+	portCOMPARE_MATCH_REGISTER_HIGH = ucHighByte;
+	portCOMPARE_MATCH_REGISTER_LOW = ucLowByte;
 
 	/* Setup clock source and compare match behaviour. */
-	ucLowByte = portCLEAR_COUNTER_ON_MATCH | portPRESCALE_64;
-	TCCR1B = ucLowByte;
+	portSETUP_CLOCK_AND_COMPARE_MATCH_BEHAVIOR();
 
 	/* Enable the interrupt - this is okay as interrupt are currently globally
 	disabled. */
-	ucLowByte = TIMSK;
-	ucLowByte |= portCOMPARE_MATCH_A_INTERRUPT_ENABLE;
-	TIMSK = ucLowByte;
+	ucLowByte = portINTERRUPT_REGISTER;
+	ucLowByte |= portCOMPARE_MATCH_INTERRUPT_ENABLE;
+	portINTERRUPT_REGISTER = ucLowByte;
 }
 /*-----------------------------------------------------------*/
 
@@ -402,8 +431,7 @@ uint8_t ucHighByte, ucLowByte;
 	 * the context is saved at the start of vPortYieldFromTick().  The tick
 	 * count is incremented after the context is saved.
 	 */
-	void SIG_OUTPUT_COMPARE1A( void ) __attribute__ ( ( signal, naked ) );
-	void SIG_OUTPUT_COMPARE1A( void )
+	ISR(portCOMPARE_MATCH_VECTOR)
 	{
 		vPortYieldFromTick();
 		asm volatile ( "reti" );
@@ -415,8 +443,7 @@ uint8_t ucHighByte, ucLowByte;
 	 * tick count.  We don't need to switch context, this can only be done by
 	 * manual calls to taskYIELD();
 	 */
-	void SIG_OUTPUT_COMPARE1A( void ) __attribute__ ( ( signal ) );
-	void SIG_OUTPUT_COMPARE1A( void )
+	ISR(portCOMPARE_MATCH_VECTOR)
 	{
 		xTaskIncrementTick();
 	}
