@@ -50,34 +50,34 @@ Changes from V2.6.0
 /* Hardware definitions for timer*/
 #if defined(__AVR_ATmega323__)||defined(__AVR_ATmega328PB__)||defined(__AVR_ATmega2560__)
 #if defined(__AVR_ATmega323__)
-#define portINTERRUPT_REGISTER										TIMSK
-#define portCOMPARE_MATCH_INTERRUPT_ENABLE			( ( uint8_t ) 1<<4 )
+#define portINTERRUPT_REGISTER                          TIMSK
+#define portCOMPARE_MATCH_INTERRUPT_ENABLE              ( ( uint8_t ) 1<<4 )
 #else
-#define portINTERRUPT_REGISTER										TIMSK1
-#define portCOMPARE_MATCH_INTERRUPT_ENABLE			( ( uint8_t ) 1<<1 )
+#define portINTERRUPT_REGISTER                          TIMSK1
+#define portCOMPARE_MATCH_INTERRUPT_ENABLE              ( ( uint8_t ) 1<<1 )
 #endif
-#define portCOMPARE_MATCH_REGISTER_HIGH					OCR1AH
-#define portCOMPARE_MATCH_REGISTER_LOW					OCR1AL
-#define portCOMPARE_MATCH_VECTOR								TIMER1_COMPA_vect
-#define portCLEAR_COUNTER_ON_MATCH							( ( uint8_t ) 1<<3 )
-#define portPRESCALE_64														( ( uint8_t ) 0x03 )
-#define portCLOCK_PRESCALER											( ( uint32_t ) 64 )
-#define portSETUP_CLOCK_AND_COMPARE_MATCH_BEHAVIOR()	\
+#define portCOMPARE_MATCH_REGISTER_HIGH                 OCR1AH
+#define portCOMPARE_MATCH_REGISTER_LOW                  OCR1AL
+#define portCOMPARE_MATCH_VECTOR                        TIMER1_COMPA_vect
+#define portCLEAR_COUNTER_ON_MATCH                      ( ( uint8_t ) 1<<3 )
+#define portPRESCALE_64                                 ( ( uint8_t ) 0x03 )
+#define portCLOCK_PRESCALER                             ( ( uint32_t ) 64 )
+#define portSETUP_CLOCK_AND_COMPARE_MATCH_BEHAVIOR()    \
 TCCR1B =  portCLEAR_COUNTER_ON_MATCH | portPRESCALE_64;
 
-#elif defined(__AVR_ATmega4809__)||defined(__AVR_ATmega4808__)
-#define portCONTROL_REGISTER											TCA0.SINGLE.CTRLA
-#define portTIMER_INTERRUPT_REGISTER							TCA0.SINGLE.INTCTRL
-#define portCOMPARE_MATCH_REGISTER_HIGH					TCA0.SINGLE.CMP0H
-#define portCOMPARE_MATCH_REGISTER_LOW					TCA0.SINGLE.CMP0L
-#define portCOMPARE_MATCH_VECTOR								TCA0_OVF_vect
-#define portTCA0_ENABLE														( ( uint8_t ) 0x01 )
-#define portCOMPARE_CHANNEL_ENABLE							( ( uint8_t ) 1<<4 )
-#define portCLEAR_COUNTER_ON_MATCH							( ( uint8_t ) 0x01 )
-#define portPRESCALE_64														( ( uint8_t ) 5<<1 )
-#define portCLOCK_PRESCALER											( ( uint32_t ) 64 )
-#define portCOMPARE_MATCH_INTERRUPT_ENABLE			( ( uint8_t ) 1<<4 )
-#define portSETUP_CLOCK_AND_COMPARE_MATCH_BEHAVIOR()	\
+#elif defined(__AVR_ATmega4809__)
+#define portCONTROL_REGISTER                            TCA0.SINGLE.CTRLA
+#define portTIMER_INTERRUPT_REGISTER                    TCA0.SINGLE.INTCTRL
+#define portCOMPARE_MATCH_REGISTER_HIGH                 TCA0.SINGLE.CMP0H
+#define portCOMPARE_MATCH_REGISTER_LOW                  TCA0.SINGLE.CMP0L
+#define portCOMPARE_MATCH_VECTOR                        TCA0_OVF_vect
+#define portTCA0_ENABLE                                 ( ( uint8_t ) 0x01 )
+#define portCOMPARE_CHANNEL_ENABLE                      ( ( uint8_t ) 1<<4 )
+#define portCLEAR_COUNTER_ON_MATCH                      ( ( uint8_t ) 0x01 )
+#define portPRESCALE_64                                 ( ( uint8_t ) 5<<1 )
+#define portCLOCK_PRESCALER                             ( ( uint32_t ) 64 )
+#define portCOMPARE_MATCH_INTERRUPT_ENABLE              ( ( uint8_t ) 1<<4 )
+#define portSETUP_CLOCK_AND_COMPARE_MATCH_BEHAVIOR()    \
 TCA0.SINGLE.CTRLB = portCOMPARE_CHANNEL_0_ENABLE | portCLEAR_COUNTER_ON_MATCH;\
 TCA0.SINGLE.CTRLA = portTCA0_ENABLE | portPRESCALE_64;
 #endif
